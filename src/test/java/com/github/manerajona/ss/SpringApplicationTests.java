@@ -1,10 +1,10 @@
-package com.manerajona.sprock;
+package com.github.manerajona.ss;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SfgDiApplicationTests {
+class SpringApplicationTests {
 
 	@Test
 	void contextLoads() {
