@@ -1,6 +1,5 @@
 package com.github.manerajona.ss
 
-
 import groovy.util.logging.Slf4j
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
@@ -16,19 +15,18 @@ abstract class IntegrationTestSpecification extends Specification {
     protected static final int TIMEOUT_MILLIS = 1500
 
     @Shared
-    protected WebClient webClient;
+    protected WebClient webClient
 
     def setupSpec() {
-
         def baseUrl = 'http://localhost:8080'
-        def wiretap = HttpClient.create().wiretap(true)
+        def wiretap = HttpClient.create()wiretap(true)
 
         log.info "Init WebClient with base url=$baseUrl"
 
         webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .clientConnector(new ReactorClientHttpConnector(wiretap))
-                .build();
+                .build()
     }
 
     def cleanupSpec() {

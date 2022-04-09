@@ -1,23 +1,28 @@
 import java.text.SimpleDateFormat
+import java.util.stream.IntStream
 
 class Groovy101 {
-    static SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy")
 
     static void main(String[] args) {
-        // System out
+
+        // style
         println("Hello World")
+        println 'Hello World' // same but not quite
 
-        // Return
-        println(doubleIt(69))
+        // Functions
+        println doubleIt(69)
 
-        // Types
-        def date = new Date()
-        println("Today is ${sdf.format(date)}")
-
-        def x = doubleIt(20)
-        println("x is $x")
+        def x = doubleIt 20
+        println "x is $x"
 
         // Strings
+        def s = "JoNaThAn"
+        println "My name is ${s.toUpperCase()}"
+        println 'My name is ${s.toUpperCase()}' // Literal
+
+        def date = new Date()
+        println "Today is ${sdf.format(date)}"
+
         def s1 = "A string"
         def s2 = 'A string'
         def s3 = """Groovy
@@ -26,16 +31,12 @@ class Groovy101 {
          """
         println([s1, s2, s3])
 
-        def s = "JoNaThAn"
-        println("My name is ${s.toUpperCase()}")
-        println('My name is ${s.toUpperCase()}') // Literal
-
         // Objects
         def jonathan = new Person("Jonathan", 30)
         jonathan.describePerson()
 
-        jonathan.name = "Robert"
-        jonathan.age = 56
+        jonathan.name = "Jona"
+        jonathan.age = 33
         jonathan.describePerson()
 
         // Collections
@@ -48,47 +49,43 @@ class Groovy101 {
         m.p1 = new Person("Margaret", 10)
         ((Person) m.p1).describePerson()
 
-        // Closures (anonymous obj)
-        def echoIt = {
-            println(it)
+        // Iterators
+        for (int j in [1, 2, 3]) println j
+
+        [3, 2, 1].each {
+            println it
         }
-        echoIt("Hello closure!")
+
+        // Closures
+        def echoIt = {
+            println it
+        }
+        echoIt "Hello closure!"
 
         def echoThat = { that ->
-            println(that)
+            println that
         }
-        echoThat("This is that...")
+        echoThat "This is that..."
 
         def echoABC = { a, b, c ->
-            println(a)
-            println(b)
-            println(c)
+            println a; println b; println c
         }
         echoABC("A", "B", "C")
 
-        println(oneArgMethod { 10 })
-        println(twoArgMethod(40, { 10 }))
+        def i = oneArgMethod { 10 }
 
-        def i = oneArgMethod {
-            def y = 3
-            y * 2
-        }
+        assert i == 20
 
-        assert i == 12
+        def j = oneArgMethod { def y = 3; y * 2 }
 
-        // Iterators
-        for (int j in [1, 2, 3]) {
-            println(j)
-        }
-
-        [3, 2, 1].each {
-            println(it)
-        }
+        assert j == 12
 
         // Closure Resolution
         jonathan.countdownYears()
-        jonathan.executeInside { println(age)}
+        jonathan.executeInside { println "age $age" }
     }
+
+    static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy")
 
     static Integer doubleIt(i) {
         return i * 2
@@ -99,24 +96,22 @@ class Groovy101 {
         Integer age
 
         Person(String name, Integer age) {
-            this.name = name
-            this.age = age
+            this.name = name; this.age = age
         }
 
         void describePerson() {
-            println("Person name is ${this.name}, ${this.age} years old")
+            println "Person name is ${name}, ${age} years old"
         }
 
         Closure countdownYears = {
-            for (def j = this.age; j > 0; j--) {
-                print(j)
-            }
-            printf("\n")
+            println 'counting down years...'
+            IntStream.rangeClosed(0, age)boxed()sorted(Comparator.reverseOrder())forEach(i -> {
+                sleep(150); print "$i-"
+            }); println 'boom!'
         }
 
         def executeInside(Closure c) {
-            c.delegate = this
-            c()
+            c.delegate = this; c()
         }
     }
 
@@ -124,7 +119,4 @@ class Groovy101 {
         closure() * 2
     }
 
-    static def twoArgMethod(factor, closure) {
-        closure() * factor
-    }
 }

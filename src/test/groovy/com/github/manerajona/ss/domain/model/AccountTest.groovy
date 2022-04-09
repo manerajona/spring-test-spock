@@ -9,11 +9,8 @@ class AccountTest extends Specification {
     EasyRandom easyRandom
 
     void setup() {
-        EasyRandomParameters parameters =
-                new EasyRandomParameters()
-                        .stringLengthRange(5, 10)
-                        .seed(new Random().nextInt())
-
+        def seed = new Random().nextInt()
+        EasyRandomParameters parameters = new EasyRandomParameters().stringLengthRange(5, 10)seed(seed)
         easyRandom = new EasyRandom(parameters)
     }
 
@@ -24,7 +21,7 @@ class AccountTest extends Specification {
         i == 2
     }
 
-    def 'GetBalance should be the same'() {
+    def 'getBalance should remain the same'() {
         final def initialBalance = easyRandom.nextDouble()
         final def testAccount =
                 Account.builder()
@@ -33,14 +30,19 @@ class AccountTest extends Specification {
                         .currency(easyRandom.nextObject(Currency.class))
                         .build()
 
-        expect:
+        expect: 'the balance remains the same'
         testAccount.getBalance() == initialBalance
     }
 
-    def 'When Deposit balance should be 1200.00'() {
-        given:
+    def 'deposit should update balance to 1200.00'() {
+
+        given: 'initial balance'
         final def initialBalance = 1000.00
+
+        and: 'amount to deposit'
         final def amount = 200.00
+
+        and: 'random account'
         final def testAccount =
                 Account.builder()
                         .username(easyRandom.nextObject(String.class))
@@ -48,18 +50,23 @@ class AccountTest extends Specification {
                         .currency(easyRandom.nextObject(Currency.class))
                         .build()
 
-        when:
+        when: 'amount is deposited'
         def balance = testAccount.deposit(amount)
 
-        then:
+        then: 'Balance should be 1200.00'
         balance == (double) 1200.00
         testAccount.getBalance() == (double) 1200.00
     }
 
-    def 'When Withdraw balance should be 800.00'() {
-        given:
+    def 'withdraw from the app should update balance to 800.00'() {
+
+        given: 'initial balance'
         final def initialBalance = 1000.00
+
+        and: 'amount to withdraw'
         final def amount = 200.00
+
+        and: 'random account'
         final def testAccount =
                 Account.builder()
                         .username(easyRandom.nextObject(String.class))
@@ -67,18 +74,23 @@ class AccountTest extends Specification {
                         .currency(easyRandom.nextObject(Currency.class))
                         .build()
 
-        when:
-        def balance = testAccount.withdraw(amount, true)
+        when: 'amount is withdrew using a device distinct from an atm'
+        def balance = testAccount.withdraw(amount, false)
 
-        then:
+        then: 'balance should be 800.00'
         balance == (double) 800.00
         testAccount.getBalance() == (double) 800.00
     }
 
-    def 'When Withdraw from an ATM 500.00 or more should throw IllegalArgumentException'() {
-        given:
+    def 'withdraw from atm should update balance to 800.00'() {
+
+        given: 'initial balance'
         final def initialBalance = 1000.00
-        final def amount = 600.00
+
+        and: 'amount to withdraw'
+        final def amount = 200.00
+
+        and: 'random account'
         final def testAccount =
                 Account.builder()
                         .username(easyRandom.nextObject(String.class))
@@ -86,10 +98,34 @@ class AccountTest extends Specification {
                         .currency(easyRandom.nextObject(Currency.class))
                         .build()
 
-        when:
+        when: 'amount is withdrew from atm'
+        def balance = testAccount.withdraw(amount, true)
+
+        then: 'balance should be 800.00'
+        balance == (double) 800.00
+        testAccount.getBalance() == (double) 800.00
+    }
+
+    def 'withdraw from atm with amount of 500.00 or more should throw IllegalArgumentException'() {
+
+        given: 'initial balance'
+        final def initialBalance = 1000.00
+
+        and: 'amount to withdraw'
+        final def amount = 600.00
+
+        and: 'random account'
+        final def testAccount =
+                Account.builder()
+                        .username(easyRandom.nextObject(String.class))
+                        .balance(initialBalance)
+                        .currency(easyRandom.nextObject(Currency.class))
+                        .build()
+
+        when: 'amount is withdrew from atm'
         testAccount.withdraw(amount, false)
 
-        then:
+        then: 'an exception should be thrown'
         thrown(IllegalArgumentException)
         testAccount.getBalance() == initialBalance.doubleValue()
     }

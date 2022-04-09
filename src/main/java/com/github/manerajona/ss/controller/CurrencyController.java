@@ -63,8 +63,8 @@ public class CurrencyController {
     public ResponseEntity<Mono<Currency>> getById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(service.getById(id)
                 .defaultIfEmpty(new Currency())
-                .doOnNext(p -> {
-                    if (p.getId() == null)
+                .doOnNext(c -> {
+                    if (c.getId() == null)
                         throw new NotFoundException();
                 }));
     }
@@ -73,16 +73,16 @@ public class CurrencyController {
     public ResponseEntity<Mono<Currency>> getBySymbol(@PathVariable("symbol") String symbol) {
         return ResponseEntity.ok(service.getBySymbol(symbol)
                 .defaultIfEmpty(new Currency())
-                .doOnNext(p -> {
-                    if (p.getId() == null)
+                .doOnNext(c -> {
+                    if (c.getId() == null)
                         throw new NotFoundException();
                 }));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Mono<Void>> update(@PathVariable("id") Long id, @RequestBody Currency currency) {
-        service.update(id, currency).subscribe(p -> {
-            if (p.getId() == null)
+        service.update(id, currency).subscribe(c -> {
+            if (c.getId() == null)
                 throw new NotFoundException();
         });
         return ResponseEntity.noContent().build();

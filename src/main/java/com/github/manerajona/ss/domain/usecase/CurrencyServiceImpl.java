@@ -45,13 +45,11 @@ public class CurrencyServiceImpl implements CurrencyService {
     public Mono<Currency> update(Long id, Currency currency) {
         return repository.findById(id)
                 .defaultIfEmpty(new Currency())
-                .map(p -> {
-                    Optional.ofNullable(currency.getPrice()).ifPresent(p::setPrice);
-                    Optional.ofNullable(currency.getMarketCap()).ifPresent(p::setMarketCap);
-                    return p;
-                }).flatMap(updated -> Optional.ofNullable(updated.getId())
-                        .map(i -> repository.save(updated))
-                        .orElse(Mono.just(updated)));
+                .flatMap(c -> {
+                    Optional.ofNullable(currency.getPrice()).ifPresent(c::setPrice);
+                    Optional.ofNullable(currency.getMarketCap()).ifPresent(c::setMarketCap);
+                    return repository.save(c);
+                });
     }
 
     @Override

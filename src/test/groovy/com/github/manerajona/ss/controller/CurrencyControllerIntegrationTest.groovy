@@ -24,12 +24,13 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
 
     @Unroll
     @Order(1)
-    def "Create currency #name"() {
+    def "Create currency #symbol (#name)"() {
         def uri = '/currencies'
         def countDownLatch = new CountDownLatch(1)
         def currency = new Currency(id, name, symbol, buyPrice, marketCap, isCrypto)
 
-        expect:
+        expect: 'a new currency will be created and the location of the resource in the header'
+
         webClient.post().uri(uri)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(currency))
@@ -39,17 +40,17 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 .subscribe(responseEntity -> {
                     assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED)
 
-                    def location = responseEntity.getHeaders().get(HttpHeaders.LOCATION).stream().findAny().orElse('')
+                    def location = responseEntity.getHeaders() get(HttpHeaders.LOCATION) stream() findAny() orElse('')
                     assertThat(location).containsOnlyOnce(uri)
 
                     countDownLatch.countDown()
                 })
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         assertThat(countDownLatch.getCount()).isEqualTo(0)
 
         where: 'Use cases'
+
         id | name             | symbol | buyPrice  | marketCap     | isCrypto
         1  | 'US Dollar'      | 'US'   | 1D        | 0L            | false
         2  | 'Euro'           | 'EUR'  | 1.09D     | 0L            | false
@@ -62,12 +63,12 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
 
     @Unroll
     @Order(2)
-    def "Get currency by id #id"() {
-
+    def "Get currency by id=#id"() {
         def uri = "/currencies/$id"
         def countDownLatch = new CountDownLatch(1)
 
-        expect:
+        expect: 'currency will be returned from the service'
+
         webClient.get().uri(uri)
                 .retrieve()
                 .bodyToMono(Currency.class)
@@ -84,10 +85,10 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 })
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         assertThat(countDownLatch.getCount()).isEqualTo(0)
 
         where: 'Use cases'
+
         id | name             | symbol | buyPrice  | marketCap     | isCrypto
         1  | 'US Dollar'      | 'US'   | 1D        | 0L            | false
         2  | 'Euro'           | 'EUR'  | 1.09D     | 0L            | false
@@ -100,11 +101,10 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
 
     @Order(3)
     def 'List all currencies'() {
-
         def uri = '/currencies'
         def countDownLatch = new CountDownLatch(1)
 
-        expect:
+        expect: 'a list with all currencies will be returned'
 
         webClient.get().uri(uri)
                 .accept(MediaType.APPLICATION_JSON)
@@ -118,20 +118,18 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 })
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         assertThat(countDownLatch.getCount()).isEqualTo(0)
     }
 
     @Unroll
     @Order(4)
     def "Update #symbol price to #buyPrice"() {
-
         def uri = "/currencies/$id"
         def countDownLatch = new CountDownLatch(1)
         def currency = new Currency()
         currency.setPrice(buyPrice)
 
-        expect:
+        expect: 'the price of the existing currency will be updated'
 
         webClient.patch().uri(uri)
                 .accept(MediaType.APPLICATION_JSON)
@@ -146,10 +144,10 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 })
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         assertThat(countDownLatch.getCount()).isEqualTo(0)
 
         where: 'Use cases'
+
         id | symbol | buyPrice
         4  | 'BTC'  | 43000D
         5  | 'ETH'  | 3300D
@@ -162,7 +160,8 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
         def uri = "/currencies/ISO:$symbol"
         def countDownLatch = new CountDownLatch(1)
 
-        expect:
+        expect: 'the currency will be found by its symbol'
+
         webClient.get().uri(uri)
                 .retrieve()
                 .bodyToMono(Currency.class)
@@ -179,10 +178,10 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 })
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         assertThat(countDownLatch.getCount()).isEqualTo(0)
 
         where: 'Use cases'
+
         id | name       | symbol | buyPrice | marketCap     | isCrypto
         4  | 'Bitcoin'  | 'BTC'  | 43000D   | 809545201497L | true
         5  | 'Ethereum' | 'ETH'  | 3300D    | 387318531344L | true
@@ -192,11 +191,11 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
 
     @Unroll
     @Order(6)
-    def "Delete #symbol"() {
+    def "Delete #symbol by id"() {
         def uri = "/currencies/$id"
         def countDownLatch = new CountDownLatch(1)
 
-        expect:
+        expect: 'the currency will be removed'
 
         webClient.delete().uri(uri)
                 .accept(MediaType.APPLICATION_JSON)
@@ -210,10 +209,10 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 })
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         assertThat(countDownLatch.getCount()).isEqualTo(0)
 
         where: 'Use cases'
+
         id | symbol
         4  | 'BTC'
         5  | 'ETH'
@@ -222,12 +221,12 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
 
     @Unroll
     @Order(7)
-    def "Get currency by id #id should respond Not Found"() {
-
+    def "Get currency by id #id should respond with Not Found"() {
         def uri = "/currencies/$id"
         def countDownLatch = new CountDownLatch(1)
 
-        expect:
+        expect: 'the service will return currency not found'
+
         webClient.get().uri(uri)
                 .retrieve()
                 .bodyToMono(Currency.class)
@@ -237,10 +236,10 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 }, throwable -> countDownLatch.countDown())
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         assertThat(countDownLatch.getCount()).isEqualTo(0)
 
         where: 'Use cases'
+
         id | symbol
         4  | 'BTC'
         5  | 'ETH'
@@ -248,12 +247,12 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
     }
 
     @Order(8)
-    def 'GetBtcCurrentPrice should return the current price of Bitcoin'() {
-
+    def 'Get Btc Current Price should return the latest price of Bitcoin'() {
         def uri = '/currencies/btc-currentprice'
         def countDownLatch = new CountDownLatch(1)
 
-        expect:
+        expect: 'the service will return current price of BTC in EUR, GBP and USD'
+
         webClient.get().uri(uri)
                 .retrieve()
                 .bodyToMono(CurrentPriceResponse.class)
@@ -268,7 +267,6 @@ class CurrencyControllerIntegrationTest extends IntegrationTestSpecification {
                 })
 
         countDownLatch.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
-
         countDownLatch.getCount() == 0L
     }
 }
