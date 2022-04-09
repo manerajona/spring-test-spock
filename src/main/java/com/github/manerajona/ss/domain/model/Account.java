@@ -1,21 +1,19 @@
 package com.github.manerajona.ss.domain.model;
 
-import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Objects;
 
-@Document
+@Getter
+@ToString
+@Builder
 public final class Account {
     private Long id;
     private String username;
     private double balance;
     private Currency currency;
-
-    public Account(String username, double balance, Currency currency) {
-        this.username = username;
-        this.balance = balance;
-        this.currency = currency;
-    }
 
     public double deposit(double amount) {
         balance += amount;
@@ -25,23 +23,11 @@ public final class Account {
     // The atm argument is true if the user is performing the transaction at an ATM
     // It's false if the customer is performing the on the app
     public double withdraw(double amount, boolean atm) {
-        if ((amount > 500.00) & !atm) {
+        if ((amount >= 500.00) & !atm) {
             throw new IllegalArgumentException();
         }
         balance -= amount;
         return balance;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public double getBalance() {
-        return balance;
-    }
-
-    public Currency getCurrency() {
-        return currency;
     }
 
     @Override

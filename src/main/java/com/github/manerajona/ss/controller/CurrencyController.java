@@ -1,7 +1,12 @@
 package com.github.manerajona.ss.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.manerajona.ss.controller.dto.CurrentPriceResponse;
 import com.github.manerajona.ss.domain.model.Currency;
-import com.github.manerajona.ss.domain.usecase.CurrencyServiceImpl;
+import com.github.manerajona.ss.domain.usecase.CurrencyService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,26 +16,31 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping(CurrencyController.CURRENCY_URI)
+@RequiredArgsConstructor
 public class CurrencyController {
 
     public static final String CURRENCY_URI = "/currencies";
 
-    private final CurrencyServiceImpl service;
+    private final CurrencyService service;
+    private final WebClient webClient;
+    private final ObjectMapper mapper;
 
-    public CurrencyController(CurrencyServiceImpl service) {
-        this.service = service;
+    @Value("${coindesk.url}")
+    private String url;
+
+    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "The resource was not found")
+    static class NotFoundException extends RuntimeException {
     }
 
     @PostMapping
@@ -45,17 +55,23 @@ public class CurrencyController {
     }
 
     @GetMapping
-    public ResponseEntity<Flux<Currency>> getByCategoryAndAvailability(@RequestParam(required = false) String category) {
-        Flux<Currency> currencyFlux = Optional.ofNullable(category)
-                .map(service::getBySymbol)
-                .orElse(service.getAll());
-
-        return ResponseEntity.ok(currencyFlux);
+    public ResponseEntity<Flux<Currency>> getAll() {
+        return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Mono<Currency>> getById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(service.getById(id)
+                .defaultIfEmpty(new Currency())
+                .doOnNext(p -> {
+                    if (p.getId() == null)
+                        throw new NotFoundException();
+                }));
+    }
+
+    @GetMapping("/ISO:{symbol}")
+    public ResponseEntity<Mono<Currency>> getBySymbol(@PathVariable("symbol") String symbol) {
+        return ResponseEntity.ok(service.getBySymbol(symbol)
                 .defaultIfEmpty(new Currency())
                 .doOnNext(p -> {
                     if (p.getId() == null)
@@ -74,12 +90,28 @@ public class CurrencyController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Mono<Void>> delete(@PathVariable("id") Long id) {
-        service.delete(id);
+        service.delete(id).subscribe();
         return ResponseEntity.noContent().build();
     }
 
-    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "The resource was not found")
-    static class NotFoundException extends RuntimeException {
+    @GetMapping("/btc-currentprice")
+    public ResponseEntity<Mono<CurrentPriceResponse>> getBtcCurrentPrice() {
+
+        Mono<CurrentPriceResponse> responseMono = webClient.get()
+                .uri(url.concat("/v1/bpi/currentprice.json"))
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(json -> {
+                    CurrentPriceResponse response;
+                    try {
+                        response = mapper.readValue(json, CurrentPriceResponse.class);
+                    } catch (JsonProcessingException e) {
+                        response = new CurrentPriceResponse();
+                    }
+                    return response;
+                });
+
+        return ResponseEntity.ok(responseMono);
     }
 
 }

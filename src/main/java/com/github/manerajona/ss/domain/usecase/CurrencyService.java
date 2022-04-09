@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 public interface CurrencyService {
     Mono<Long> create(Currency currency);
     Mono<Currency> getById(Long id);
-    Flux<Currency> getBySymbol(String symbol);
+    Mono<Currency> getBySymbol(String symbol);
     Flux<Currency> getAll();
     Mono<Currency> update(Long id, Currency currency);
     Mono<Void> delete(Long id);
