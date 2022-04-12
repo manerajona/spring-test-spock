@@ -5,9 +5,9 @@ plugins {
     id 'groovy'
 }
 
-group = 'com.github.manerajona'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+group = artifactGroup
+version = artifactVersion
+sourceCompatibility = javaVersion
 
 configurations {
     compileOnly {
@@ -34,20 +34,21 @@ dependencies {
     }
 
     // mandatory dependencies for using Spock with spring
-    implementation 'org.codehaus.groovy:groovy:3.0.10'
-    implementation 'org.codehaus.groovy:groovy-all:3.0.10'
-    testImplementation platform('org.spockframework:spock-bom:2.1-groovy-3.0')
-    testImplementation 'org.spockframework:spock-spring:2.2-M1-groovy-3.0'
+    implementation "org.codehaus.groovy:groovy:$groovyVersion"
+    implementation "org.codehaus.groovy:groovy-all:$groovyVersion"
+    testImplementation platform("org.spockframework:spock-bom:$spockVersion")
+    testImplementation "org.spockframework:spock-spring:$spockVersion"
     testImplementation 'org.spockframework:spock-core'
 
     // optional dependencies for using Spock
-    testImplementation 'io.projectreactor:reactor-test'             // only necessary if Reactor features are used
+    testImplementation 'io.projectreactor:reactor-test'             // only necessary if Reactor Test features are needed
     testImplementation 'org.jeasy:easy-random-core:5.0.0'           // allows mocking create random values and objects
 }
 
 test {
     useJUnitPlatform()
     testLogging {
-        events "passed", "skipped", "failed"
+        showStandardStreams true
+        events 'passed', 'skipped', 'failed'
     }
 }
